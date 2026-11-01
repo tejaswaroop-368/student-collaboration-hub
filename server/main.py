@@ -33,6 +33,8 @@ EXCLUDED_PATH = {
     "/api/users/sign-up",
     "/api/users/login",
     "/docs",
+    "/openapi.json",
+    "/redoc",
     "/"
 }
 
