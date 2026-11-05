@@ -6,4 +6,5 @@ bcrypt==4.1.0
 PyJWT==2.13.0
 gunicorn==21.2.0
 python-multipart
-pydantic-mongocertifi
+pydantic-mongo
+certifi
