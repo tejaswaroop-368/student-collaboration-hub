@@ -27,15 +27,20 @@ function NavigationBar() {
             >
               <i className="bi bi-house-fill"></i>
             </Link>
-            <span className="fb-nav-icon" title="Groups">
-              <i className="bi bi-people-fill"></i>
-            </span>
-            <span className="fb-nav-icon" title="Messages">
+            <Link
+              to="/messages"
+              className={`fb-nav-icon ${location.pathname === '/messages' ? 'active' : ''}`}
+              title="Messages"
+            >
               <i className="bi bi-chat-dots-fill"></i>
-            </span>
-            <span className="fb-nav-icon" title="Notifications">
+            </Link>
+            <Link
+              to="/notifications"
+              className={`fb-nav-icon ${location.pathname === '/notifications' ? 'active' : ''}`}
+              title="Notifications"
+            >
               <i className="bi bi-bell-fill"></i>
-            </span>
+            </Link>
           </div>
         )}
 

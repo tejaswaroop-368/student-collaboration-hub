@@ -1,6 +1,8 @@
 import AuthForm from './components/AuthForm';
 import Home from './components/Home';
 import NavigationBar from './components/NavigationBar';
+import Notifications from './components/Notifications';
+import Messages from './components/Messages';
 import {
   BrowserRouter as Router,
   Routes,
@@ -19,6 +21,8 @@ function App() {
         <Route path="/login" element={<AuthForm isLogin={true} />} />
         <Route path="/signup" element={<AuthForm isLogin={false} />} />
         <Route path="/" element={<Home/>} />
+        <Route path="/notifications" element={<Notifications />} />
+        <Route path="/messages" element={<Messages />} />
       </Routes>
     </>
   )

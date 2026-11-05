@@ -9,8 +9,8 @@ comment_router = APIRouter()
 
 @comment_router.post("/create", response_model=dict)
 async def create_comment(comment: Comment, authorization: str = Header(None)):
-    post_exists = database.get_collection("posts").count_documents({"post_id": comment.post_id}) > 0
-    if not post_exists:
+    post = database.get_collection("posts").find_one({"post_id": comment.post_id})
+    if not post:
         raise HTTPException(status_code=404, detail="Post not found!")
     
     user_details = decode_jwt_token(authorization)
@@ -24,6 +24,25 @@ async def create_comment(comment: Comment, authorization: str = Header(None)):
 
     if not result.acknowledged:
         raise HTTPException(status_code=500, detail="Failed to create comment")
+
+    comment_author = comment_data["created_by"]
+    post_owner = post.get("created_by")
+    if post_owner and post_owner != comment_author:
+        database.get_collection("notifications").update_one(
+            {"comment_id": comment_data["comment_id"]},
+            {"$setOnInsert": {
+                "notification_id": str(uuid4()),
+                "recipient_email": post_owner,
+                "actor_email": comment_author,
+                "type": "comment",
+                "post_id": comment.post_id,
+                "comment_id": comment_data["comment_id"],
+                "text": f"{comment_author} commented on your post",
+                "created_at": comment_data["created_at"],
+                "read": False,
+            }},
+            upsert=True,
+        )
     
     return {
         "status": "success",

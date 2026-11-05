@@ -8,6 +8,8 @@ from db import database
 from routes.user_router import router
 from routes.post_router import post_router
 from routes.comment_router import comment_router
+from routes.notification_router import notification_router
+from routes.message_router import message_router
 from bson import ObjectId
 from fastapi.encoders import ENCODERS_BY_TYPE
 ENCODERS_BY_TYPE[ObjectId] = str
@@ -20,6 +22,8 @@ app = FastAPI()
 app.include_router(router, prefix="/api/users", tags=["users"])
 app.include_router(post_router, prefix="/api/posts", tags=["posts"])
 app.include_router(comment_router, prefix="/api/comments", tags=["comments"])
+app.include_router(notification_router, prefix="/api/notifications", tags=["notifications"])
+app.include_router(message_router, prefix="/api/messages", tags=["messages"])
 
 app.add_middleware(
     CORSMiddleware,

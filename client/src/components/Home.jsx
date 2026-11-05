@@ -3,10 +3,10 @@ import axios from 'axios';
 import Badge from 'react-bootstrap/Badge';
 import Button from 'react-bootstrap/Button';
 import Collapse from 'react-bootstrap/Collapse';
+import Alert from 'react-bootstrap/Alert';
 import Modal from 'react-bootstrap/Modal';
 import InputGroup from 'react-bootstrap/InputGroup';
 import Form from 'react-bootstrap/Form';
-import Image from 'react-bootstrap/Image';
 import Loader from './Loader';
 
 const getInitials = (text) => {
@@ -216,6 +216,24 @@ const Home = () => {
             setExpandedPostId(postId);
             setFocusCommentInput(focusInput);
         }
+    }
+
+    const toggleLike = async (postId) => {
+        try {
+            const response = await axios.post(
+                `${import.meta.env.VITE_SH_BE_URI}api/posts/${postId}/like`,
+                {},
+                { headers: { Authorization: localStorage.getItem('token') } }
+            );
+            const likeData = response.data.data;
+            setPosts((current) => current.map((post) =>
+                post.post_id === postId
+                    ? { ...post, ...likeData }
+                    : post
+            ));
+        } catch (error) {
+            console.error('Error updating like:', error);
+        }
     };
 
     const PostCard = ({ post }) => {
@@ -253,13 +271,10 @@ const Home = () => {
                     )}
                 </div>
 
-                {post.file_url && (
-                    <Image src={post.file_url} alt={post.title} className="fb-post-image" />
-                )}
-
                 <div className="fb-post-actions">
-                    <button type="button" className="fb-action-btn">
-                        <i className="bi bi-hand-thumbs-up"></i> Like
+                    <button type="button" className="fb-action-btn" onClick={() => toggleLike(post.post_id)}>
+                        <i className={`bi bi-hand-thumbs-up${post.liked ? '-fill text-primary' : ''}`}></i>
+                        Like {post.like_count || 0}
                     </button>
                     <button
                         type="button"
@@ -291,23 +306,16 @@ const Home = () => {
             title: '',
             content: '',
             tags: [],
-            file: null,
         });
         const [tagInput, setTagInput] = useState('');
         const [submitting, setSubmitting] = useState(false);
+        const [submitError, setSubmitError] = useState('');
 
         const handleChange = (e) => {
             const { name, value } = e.target;
             setPostInput((prev) => ({
                 ...prev,
                 [name]: value,
-            }));
-        };
-
-        const handleFileChange = (e) => {
-            setPostInput((prev) => ({
-                ...prev,
-                file: e.target.files[0],
             }));
         };
 
@@ -342,6 +350,7 @@ const Home = () => {
 
         const handleSubmit = async (e) => {
             e.preventDefault();
+            setSubmitError('');
             setSubmitting(true);
             try {
                 const formData = new FormData();
@@ -349,9 +358,6 @@ const Home = () => {
                 formData.append('title', postInput.title);
                 formData.append('content', postInput.content);
                 formData.append('tags', JSON.stringify(postInput.tags));
-                if (postInput.file) {
-                    formData.append('file', postInput.file);
-                }
 
                 const url = import.meta.env.VITE_SH_BE_URI + 'api/posts/create';
                 await axios.post(url, formData, {
@@ -361,11 +367,15 @@ const Home = () => {
                     }
                 });
                 fetchPosts();
+                setCreatePostModal(false);
             } catch (error) {
                 console.error('Error creating post:', error);
+                setSubmitError(
+                    error.response?.data?.detail ||
+                    'Post creation failed. Please try again.'
+                );
             } finally {
                 setSubmitting(false);
-                setCreatePostModal(false);
             }
         };
 
@@ -375,6 +385,11 @@ const Home = () => {
                     <Modal.Title className="fw-bold fs-6 w-100 text-center">Create Post</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
+                    {submitError && (
+                        <Alert variant="danger" dismissible onClose={() => setSubmitError('')}>
+                            {submitError}
+                        </Alert>
+                    )}
                     <Form onSubmit={handleSubmit}>
                         <Form.Group className="mb-3">
                             <Form.Label className="fw-semibold small text-muted">Post Type</Form.Label>
@@ -443,18 +458,6 @@ const Home = () => {
                                 ))}
                             </div>
                         </Form.Group>
-                        <Form.Group className="mb-4">
-                            <Form.Label className="fw-semibold small text-muted">
-                                <i className="bi bi-image me-1"></i> Photo
-                            </Form.Label>
-                            <Form.Control
-                                type="file"
-                                name="file"
-                                onChange={handleFileChange}
-                                accept="image/*"
-                                size="sm"
-                            />
-                        </Form.Group>
                         <Button variant="primary" type="submit" className="w-100 fw-semibold" disabled={submitting}>
                             {submitting ? 'Posting...' : 'Post'}
                         </Button>
@@ -484,13 +487,6 @@ const Home = () => {
                         </button>
                     </div>
                     <div className="border-top pt-2 d-flex justify-content-around">
-                        <button
-                            type="button"
-                            className="fb-action-btn"
-                            onClick={() => setCreatePostModal(true)}
-                        >
-                            <i className="bi bi-image text-success"></i> Photo
-                        </button>
                         <button
                             type="button"
                             className="fb-action-btn"
